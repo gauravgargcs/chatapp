@@ -26,17 +26,23 @@ var server = http.createServer(app);
  */
 
 
-var io = require('socket.io')(server);
-app.set('io', io);
+
+
 
 
 server.listen(port);
+
 server.on('error', onError);
 server.on('listening', onListening);
 
+//chat socket io
+var chatHttp = require('http');
+var chatServer = chatHttp.createServer(app);
 
-
-
+const { Server } = require("socket.io");
+const io = new Server(chatServer);
+chatServer.listen(4000);
+app.set('io', io);
 /**
  * Normalize a port into a number, string, or false.
  */
