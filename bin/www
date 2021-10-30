@@ -26,23 +26,46 @@ var server = http.createServer(app);
  */
 
 
+const  users = [];
+//chat socket io
+const { Server } = require("socket.io");
+//const io = new Server(server);
+const { instrument } = require("@socket.io/admin-ui");
 
-
-
+const io = new Server(server, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true
+  }
+});
+ io.on('connection', (socket) => {
+        users.push(socket.id);
+        io.emit('online list users', users);
+ 
+  socket.on('chat message', (msg) => {
+     //socket.broadcast.emit("hello", "world");
+    io.emit('chat message', msg.msg);
+    console.log('chat message', msg);
+  });
+  socket.on('disconnect', () => {
+    console.log('user'+socket.id+' disconnected');
+     const index = users.indexOf(socket.id);
+if (index > -1) {
+  users.splice(index, 1);
+   io.emit('online list users', users);
+}
+  });
+});
+instrument(io, {
+  auth: false
+});
 
 server.listen(port);
 
 server.on('error', onError);
 server.on('listening', onListening);
 
-//chat socket io
-var chatHttp = require('http');
-var chatServer = chatHttp.createServer(app);
 
-const { Server } = require("socket.io");
-const io = new Server(chatServer);
-chatServer.listen(4000);
-app.set('io', io);
 /**
  * Normalize a port into a number, string, or false.
  */
